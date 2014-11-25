@@ -49,7 +49,7 @@ int joinReq(struct request_join*);
 int leaveReq(struct request_leave*);
 int listReq(struct request_list*);
 int whoReq(struct request_who*);
-int (struct request*, int);
+int readRequestType(struct request*, int);
 int connectToSocket(char*, char*);
 //program
 int main(int argc, char **argv)
@@ -67,9 +67,7 @@ int main(int argc, char **argv)
         bal = recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&recAddr, &fromlen);
         if(bal > 0) {
             requests = (request*) buf;
-            
-
-    (requests, bal);
+            readRequestType(requests, bal);
         } 
        delete[] buf;   
     }
@@ -419,6 +417,7 @@ int readRequestType(struct request *r, int b)
                 break;
             }
         default:
+            break;
     }
     return fin;
 }
