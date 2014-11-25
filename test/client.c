@@ -609,7 +609,7 @@ void handle_server_input()
 	char recv_text[MAX_MESSAGE_LEN];
 	data = &recv_text;
 	len = sizeof recv_text;
-	printf("Jack early handle serverinput test");
+	printf("Jack early handle serverinput test\n");
 
 	bytes = recvfrom(s, data, len, 0, (struct sockaddr*)&server, &fromlen);
 

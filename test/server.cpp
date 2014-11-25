@@ -172,18 +172,21 @@ int sayReq(struct request_say *rs)
     vector<pair<string,struct sockaddr_in> > tmpU = hit->second;
     for(int i=0; i<tmpU.size(); i++) {
         struct sockaddr_in address;
+        void *goData;
         address = tmpU[i].second;
-        struct text_say *msg = (struct text_say*) malloc(sizeof(struct text_say) + BUFLEN);
-        msg->txt_type= htonl(TXT_SAY);
-        char *AAA = (char*)malloc(sizeof(char)*BUFLEN);
-        inet_ntop(AF_INET, &(address.sin_addr), AAA, BUFLEN);
-        string printString = AAA;
-        strncpy(msg->txt_username, username.c_str(), USERNAME_MAX);
-        strncpy(msg->txt_text, message.c_str(), SAY_MAX);
-        strncpy(msg->txt_channel, channel.c_str(), CHANNEL_MAX);
+        //struct text_say *msg = (struct text_say*) malloc(sizeof(struct text_say) + BUFLEN);
+        struct text_say msg;
+        msg.txt_type= TXT_SAY;
+        //char *AAA = (char*)malloc(sizeof(char)*BUFLEN);
+        //inet_ntop(AF_INET, &(address.sin_addr), AAA, BUFLEN);
+        //string printString = AAA;
+        strncpy(msg.txt_username, username.c_str());
+        strncpy(msg.txt_text, message.c_str());
+        strncpy(msg.txt_channel, channel.c_str());
         int size = sizeof(struct sockaddr*);
+        goData = &msg;
         cout << "sockfd is: " << sockfd << " there!\n";
-        int res= sendto(sockfd, msg, sizeof(msg), 0, (struct sockaddr*)&address, sizeof(address));
+        int res= sendto(sockfd, goData, sizeof(msg), 0, (struct sockaddr*)&address, sizeof(address));
         if (res == -1) {
             cout << "sendto very badd \n";
             //return -1;
