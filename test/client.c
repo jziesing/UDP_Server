@@ -28,13 +28,7 @@ int s; //socket
 struct sockaddr_in server; //server address
 int cont; //continue to loop
 char active_channel[CHANNEL_MAX]; //active channel
-
-
 map<string,string> subscribed_channels;
-
-
-
-
 int send_login_message(char* username);
 int send_join_message(char* channel);
 int send_say_message(char* channel, char* text);
@@ -615,7 +609,7 @@ void handle_server_input()
 	char recv_text[MAX_MESSAGE_LEN];
 	data = &recv_text;
 	len = sizeof recv_text;
-
+	printf("Jack early handle serverinput test");
 
 	bytes = recvfrom(s, data, len, 0, (struct sockaddr*)&server, &fromlen);
 
@@ -637,17 +631,17 @@ void handle_server_input()
 		//recv_text = *(struct text *)data;
 
 
-		//printf("Message Type:");
+		printf("Message Type:");
 		text_t message_type = recv_text->txt_type;
-		//printf("%d", message_type);
-		//printf("\n");
+		printf("%d", message_type);
+		printf("\n");
 
 
 		if (message_type == TXT_SAY)
 		{
 			struct text_say* say_text;
 			say_text = (struct text_say*)data;
-			//printf("Say message :");
+			printf("Say message :");
 			printf("[");
 			printf(say_text->txt_channel);
 			printf("][");
