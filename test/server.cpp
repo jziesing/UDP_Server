@@ -267,7 +267,10 @@ int leaveReq(struct request_leave *rl)
     string chaNel = (string)(rl->req_channel);
     multimap<string, struct sockaddr_in>::iterator ui = userToAddrStrct.find(username);
     struct sockaddr_in address = ui->second;
-    map<string,vector<pair<string,struct sockaddr_in> > >::iterator vi = chanTlkUser.find(chaNel);
+    map<string,vector<pair<string,struct sockaddr_in> > >::iterator vi;
+    if((vi = chanTlkUser.find(chaNel)) == chanTlkUser.end()) {
+        return -1;
+    }
     vector<pair<string,struct sockaddr_in> > v = vi->second;
     for(int vecI=0; vecI<v.size(); vecI++) {
         if(v[vecI].first == username) {
