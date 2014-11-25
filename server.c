@@ -407,6 +407,7 @@ void handle_say_message(void *data, struct sockaddr_in sock)
 					strcpy(send_msg.txt_text, str);
 					send_data = &send_msg;
 					len = sizeof send_msg;
+					printf("jack printing s: %i,\n", s);
 					struct sockaddr_in send_sock = channel_user_iter->second;
 					bytes = sendto(s, send_data, len, 0, (struct sockaddr*)&send_sock, sizeof send_sock);
 					if (bytes < 0)
