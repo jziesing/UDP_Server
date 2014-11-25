@@ -180,9 +180,9 @@ int sayReq(struct request_say *rs)
         //char *AAA = (char*)malloc(sizeof(char)*BUFLEN);
         //inet_ntop(AF_INET, &(address.sin_addr), AAA, BUFLEN);
         //string printString = AAA;
-        strncpy(msg.txt_username, username.c_str());
-        strncpy(msg.txt_text, message.c_str());
-        strncpy(msg.txt_channel, channel.c_str());
+        strncpy(msg.txt_username, username.c_str(), sizeof(username));
+        strncpy(msg.txt_text, message.c_str(), sizeof(message));
+        strncpy(msg.txt_channel, channel.c_str(), sizeof(channel));
         int size = sizeof(struct sockaddr*);
         goData = &msg;
         cout << "sockfd is: " << sockfd << " there!\n";
@@ -191,7 +191,7 @@ int sayReq(struct request_say *rs)
             cout << "sendto very badd \n";
             //return -1;
         }
-        free(msg);
+       // free(msg);
     }
     tmpU.clear();
     return 0;
