@@ -49,7 +49,7 @@ int joinReq(struct request_join*);
 int leaveReq(struct request_leave*);
 int listReq(struct request_list*);
 int whoReq(struct request_who*);
-int readRequestType(struct request*, int);
+int (struct request*, int);
 int connectToSocket(char*, char*);
 //program
 int main(int argc, char **argv)
@@ -67,7 +67,9 @@ int main(int argc, char **argv)
         bal = recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&recAddr, &fromlen);
         if(bal > 0) {
             requests = (request*) buf;
-            readRequestType(requests, bal);
+            
+
+    (requests, bal);
         } 
        delete[] buf;   
     }
@@ -326,7 +328,10 @@ int whoReq(struct request_who *rw)
     struct sockaddr_in address; 
     string chaNel = (string)(rw->req_channel);
     multimap<string, struct sockaddr_in>::iterator ui = userToAddrStrct.find(username);
-    map<string,vector<pair<string,struct sockaddr_in> > >::iterator vi = chanTlkUser.find(chaNel);
+    map<string,vector<pair<string,struct sockaddr_in> > >::iterator vi;
+    if((vi = chanTlkUser.find(chaNel)) == chanTlkUser.end()) {
+        return -1;
+    }
     int numCHAN = (vi->second).size();
     vector<pair<string,struct sockaddr_in> > v = vi->second;
     address = ui->second;
