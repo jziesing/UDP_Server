@@ -13,7 +13,6 @@
 #define packed __attribute__((packed))
 
 /* Define the length limits */
-#define REQ_MAX 4096
 #define USERNAME_MAX 32
 #define CHANNEL_MAX 32
 #define SAY_MAX 64
@@ -66,13 +65,11 @@ struct request_leave {
         char req_channel[CHANNEL_MAX]; 
 } packed;
 
-//#pragma pack(1)
 struct request_say {
         request_t req_type; /* = REQ_SAY */
         char req_channel[CHANNEL_MAX]; 
         char req_text[SAY_MAX];
 } packed;
-//#pragma pack(0)
 
 struct request_list {
         request_t req_type; /* = REQ_LIST */
