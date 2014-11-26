@@ -34,7 +34,9 @@ struct addrinfo *addrAr;
 map<string,vector<string> > usrTlkChan;
 multimap<string,struct sockaddr_in> userToAddrStrct;
 map<string,vector<pair<string,struct sockaddr_in> > > chanTlkUser;
+map<string,vector<struct sockaddr_in> > chanTlkServer;
 vector<string> channels;
+vector<struct sockaddr_in> neighborSockets;
 //methods
 string stringAddr(struct sockaddr_in);
 string getUserOfCurrAddr();
@@ -50,14 +52,36 @@ int leaveReq(struct request_leave*);
 int listReq(struct request_list*);
 int whoReq(struct request_who*);
 int readRequestType(struct request*, int);
-int connectToSocket(char*, char*);
+int connectToHomeSocket(char*, char*);
+int addNeighborSockets(char*, char*);
+int s2sJoin(struct request_s2s_join*);
+int s2sLeave(struct request_s2s_leave*);
+int s2sSay(struct request_s2s_say*);
 //program
 int main(int argc, char **argv)
 {
     addrAr = NULL;
     sockfd = 0;
-    connectToSocket(argv[1], argv[2]);
-    fd_set sockfds;
+    if((argc-1) < 2) { 
+        cout << "need at least 2 argument: server IP and port.\n";
+        return -1;
+    }
+    if((argc-1) % 2 != 0) {
+        cout << "invalid arguents. must provide ip and port of each server.\n";
+        return -1;
+    }
+    connectToHomeSocket(argv[1], argv[2]);
+    if((argc-1) > 2) {
+        for(int i=3; i<argc-1; i=i+2) {
+            addNeighborSockets(argv[i], argv[i+1]);
+        }
+    }
+    //try to print all servers
+    // vector<sockaddr_in>::iterator serverIt;
+    // for(serverIt=neighborSockets.begin(); serverIt != neighborSockets.end(); serverIt++) {
+
+    //     cout << "thisiis an itt..\n";
+    // }
     while(1)
     {
         cout << "\n"; 
@@ -72,6 +96,26 @@ int main(int argc, char **argv)
        delete[] buf;   
     }
     return 0;
+}
+//server join
+int s2sJoin(struct request_s2s_join *r) 
+{
+
+return 0;
+}
+//server leave
+int s2sLeave(struct request_s2s_leave *r) 
+{
+
+
+return 0;
+}
+//server say
+int s2sSay(struct request_s2s_say *r) 
+{
+
+return 0;
+
 }
 //returns string of sockaddr_in
 string stringAddr(struct sockaddr_in a)
@@ -165,19 +209,19 @@ int loginReq(struct request_login *rl)
     string username = rl->req_username;
     struct sockaddr_in strctAddr = getAddrStruct();
     userToAddrStrct.insert(userToAddrStrct.end(), pair<string, struct sockaddr_in>(username, strctAddr));
-    map<string,vector<pair<string,struct sockaddr_in> > >::iterator it = chanTlkUser.find("Common");
-    vector<pair<string,struct sockaddr_in> > usersC;
-    if(it == chanTlkUser.end()) {
-        chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >("Common", usersC));
-        channels.push_back("Common");
-    }
-    it = chanTlkUser.find("Common");
-    usersC = it->second;
-    usersC.insert(usersC.begin(), pair<string,struct sockaddr_in>(username,strctAddr));
-    chanTlkUser["Common"] = usersC;
-    vector<string> uTalkVect;
-    uTalkVect.insert(uTalkVect.begin(),"Common");
-    usrTlkChan.insert(pair<string,vector<string> >(username, uTalkVect));    
+    //map<string,vector<pair<string,struct sockaddr_in> > >::iterator it = chanTlkUser.find("Common");
+    //vector<pair<string,struct sockaddr_in> > usersC;
+    //if(it == chanTlkUser.end()) {
+    //    chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >("Common", usersC));
+    //    channels.push_back("Common");
+    //}
+    //it = chanTlkUser.find("Common");
+    //usersC = it->second;
+    //usersC.insert(usersC.begin(), pair<string,struct sockaddr_in>(username,strctAddr));
+    //chanTlkUser["Common"] = usersC;
+    //vector<string> uTalkVect;
+    //uTalkVect.insert(uTalkVect.begin(),"Common");
+    //usrTlkChan.insert(pair<string,vector<string> >(username, uTalkVect));    
     return 0;
 }
 //handle login requests
@@ -238,10 +282,11 @@ int joinReq(struct request_join *rj)
     map<string,vector<pair<string,struct sockaddr_in> > >::iterator it = chanTlkUser.find(chan);
     vector<pair<string,struct sockaddr_in> > usersC;
     if(it == chanTlkUser.end()) {
-        //NEW CHANNEL
+        //new channel
         usersC.insert(usersC.begin(), pair<string,struct sockaddr_in>(user,reqAddr));
         chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(chan, usersC));
         channels.push_back(chan);
+        //call s2s join
     } else {
         //old channel
         it = chanTlkUser.find(chan);
@@ -360,7 +405,7 @@ int readRequestType(struct request *r, int b)
     int netHost = 0;
     netHost = ntohl(r->req_type);
     //check if addres is a crazy number or normal
-    if(netHost > 6 || netHost < 0) {
+    if(netHost > 10 || netHost < 0) {
        netHost = r->req_type;
     }
     //check if request address is valid
@@ -419,13 +464,55 @@ int readRequestType(struct request *r, int b)
             } else {
                 break;
             }
+        case S2S_JOIN:
+            if(sizeof(struct request_s2s_join) == b) {
+                fin = s2sJoin((struct request_s2s_join*) r);
+                break;
+            } else {
+                break;
+            }
+        case S2S_LEAVE:
+            if(sizeof(struct request_s2s_leave) == b) {
+                fin = s2sLeave((struct request_s2s_leave*) r);
+                break;
+            } else {
+                break;
+            }
+        case S2S_SAY:
+            if(sizeof(struct request_s2s_say) == b) {
+                fin = s2sSay((struct request_s2s_say*) r);
+                break;
+            } else {
+                break;
+            }
         default:
             break;
     }
     return fin;
 }
 
-int connectToSocket(char* ip, char* port)
+//add neighbor server's struct sockaddr_in to vector.  manage host in sockaddr_in struct
+int addNeighborSockets(char* ip, char* port)
+{
+    char host[HOST_MAX];
+    strcpy(host, ip);
+    int tmpPort = atoi(port);
+    struct hostent *tmpHost;
+    if((tmpHost = gethostbyname(host))== 0) {
+        cout << "error getting host name : \n";
+        free(tmpHost);
+        return false;
+    }
+    struct sockaddr_in tmpAddr;
+    tmpAddr.sin_family = AF_INET;
+    tmpAddr.sin_port = htons(tmpPort);
+    memcpy(&tmpAddr.sin_addr, tmpHost->h_addr_list[0], tmpHost->h_length);
+    neighborSockets.push_back(tmpAddr);
+    return true;
+
+}
+
+int connectToHomeSocket(char* ip, char* port)
 {
     struct addrinfo addressTmp;
     memset(&addressTmp, 0, sizeof addressTmp);

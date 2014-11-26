@@ -17,10 +17,12 @@
 #define USERNAME_MAX 32
 #define CHANNEL_MAX 32
 #define SAY_MAX 64
+#define HOST_MAX 256
 
 /* Define some types for designating request and text codes */
 typedef int request_t;
 typedef int text_t;
+typedef int s2s_t;
 
 /* Define codes for request types.  These are the messages sent to the server. */
 #define REQ_LOGIN 0
@@ -32,21 +34,25 @@ typedef int text_t;
 #define REQ_WHO 6
 #define REQ_KEEP_ALIVE 7 /* Only needed by graduate students */
 
+
 /* Define codes for text types.  These are the messages sent to the client. */
 #define TXT_SAY 0
 #define TXT_LIST 1
 #define TXT_WHO 2
 #define TXT_ERROR 3
 
+#define S2S_JOIN 8
+#define S2S_LEAVE 9
+#define S2S_SAY 10
+
+//_____________________________________________________________________
 /* This structure is used for a generic request type, to the server. */
 struct request {
         request_t req_type;
 } packed;
-
 /* Once we've looked at req_type, we then cast the pointer to one of
  * the types below to look deeper into the structure.  Each of these
  * corresponds with one of the REQ_ codes above. */
-
 struct request_login {
         request_t req_type; /* = REQ_LOGIN */
         char req_username[USERNAME_MAX];
@@ -66,13 +72,11 @@ struct request_leave {
         char req_channel[CHANNEL_MAX]; 
 } packed;
 
-//#pragma pack(1)
 struct request_say {
         request_t req_type; /* = REQ_SAY */
         char req_channel[CHANNEL_MAX]; 
         char req_text[SAY_MAX];
 } packed;
-//#pragma pack(0)
 
 struct request_list {
         request_t req_type; /* = REQ_LIST */
@@ -87,6 +91,7 @@ struct request_keep_alive {
         request_t req_type; /* = REQ_KEEP_ALIVE */
 } packed;
 
+//_____________________________________________________________________
 /* This structure is used for a generic text type, to the client. */
 struct text {
         text_t txt_type;
@@ -95,14 +100,12 @@ struct text {
 /* Once we've looked at txt_type, we then cast the pointer to one of
  * the types below to look deeper into the structure.  Each of these
  * corresponds with one of the TXT_ codes above. */
-
 struct text_say {
         text_t txt_type; /* = TXT_SAY */
         char txt_channel[CHANNEL_MAX];
         char txt_username[USERNAME_MAX];
         char txt_text[SAY_MAX];
 } packed;
-
 /* This is a substructure used by struct text_list. */
 struct channel_info {
         char ch_channel[CHANNEL_MAX];
@@ -113,7 +116,6 @@ struct text_list {
         int txt_nchannels;
         struct channel_info txt_channels[0]; // May actually be more than 0
 } packed;
-
 /* This is a substructure used by text_who. */
 struct user_info {
         char us_username[USERNAME_MAX];
@@ -130,5 +132,29 @@ struct text_error {
         text_t txt_type; /* = TXT_ERROR */
         char txt_error[SAY_MAX]; // Error message
 };
+
+//_____________________________________________________________________
+/* This structure is used for a generic request type, to the server. */
+struct request_s2s {
+        s2s_t req_type;
+} packed;
+//server structs
+struct request_s2s_join {
+        s2s_t req_type; /* = S2S_JOIN */
+        char req_s2s_channel[CHANNEL_MAX];
+} packed;
+
+struct request_s2s_leave {
+        s2s_t req_type; /* = S2S_LEAVE */
+        char req_s2s_channel[CHANNEL_MAX];
+} packed;
+
+struct request_s2s_say {
+        s2s_t req_type; /* = S2S_SAY */
+        int server_id;
+        char req_s2s_channel[CHANNEL_MAX]; 
+        char req_s2s_username[USERNAME_MAX];
+        char req_s2s_text[SAY_MAX];
+} packed;
 
 #endif

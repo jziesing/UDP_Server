@@ -50,13 +50,21 @@ int leaveReq(struct request_leave*);
 int listReq(struct request_list*);
 int whoReq(struct request_who*);
 int readRequestType(struct request*, int);
-int connectToSocket(char*, char*);
+int connectToHomeSocket(char*, char*);
 //program
 int main(int argc, char **argv)
 {
     addrAr = NULL;
     sockfd = 0;
-    connectToSocket(argv[1], argv[2]);
+    if(argv.length() < 2) { 
+        cout << "need at least 2 argument: server IP and port.\n";
+        return -1;
+    }
+    if(argv.length() % 2 != 0) {
+        cout << "invalid arguents. must provide ip and port of each server.\n";
+        return -1;
+    }
+    connectToHomeSocket(argv[1], argv[2]);
     fd_set sockfds;
     while(1)
     {
@@ -425,7 +433,7 @@ int readRequestType(struct request *r, int b)
     return fin;
 }
 
-int connectToSocket(char* ip, char* port)
+int connectToHomeSocket(char* ip, char* port)
 {
     struct addrinfo addressTmp;
     memset(&addressTmp, 0, sizeof addressTmp);
