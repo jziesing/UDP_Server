@@ -6,6 +6,8 @@
  *  gcc -o server UDPServer.c
  *  ./server
  */
+ //#include <endian.h>
+       #include <stdint.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -111,7 +113,7 @@ int main(int argc, char **argv)
         for(kin = chanTlkServer.begin(); kin != chanTlkServer.end(); kin++) {
             cout << kin->first << " : channel has servers..\n";
             for(int j=0; j<kin->second.size(); j++) {
-                cout << "test!!" << " : is a server.\n";
+                cout << stringAddr(kin->second[j]) << " : is a server.\n";
             }
         }
        delete[] buf;   
@@ -240,12 +242,43 @@ int checkValidAddr()
     }
     return -1;
 }
+int sendS2SSay(struct request_say *r, string username)
+{
+    string channel = r->req_channel;
+    string message = r->req_text;
+
+    long long id = rand();
+    id = id << 32 | rand();
+    struct request_s2s_say sayToServMsg;
+    sayToServMsg.req_type = htonl(S2S_SAY);
+    sayToServMsg.server_id = be64toh(id);
+    strcpy(sayToServMsg.req_s2s_channel, channel.c_str());
+    strcpy(sayToServMsg.req_s2s_username, username.c_str());
+    strncpy(sayToServMsg.req_s2s_text, r->req_text.c_str(), SAY_MAX);
+
+    map<string,vector<struct sockaddr_in> >::iterator i = chanTlkServer.find(channel);
+    if(i == chanTlkServer.end()) {
+        cout << "error finding channel to say to in channel to server map.\n";
+        return -1;
+    }  
+    vector<struct sockaddr_in> tmpServs = i->second;
+    int res = 0m
+    for(int j=0; j<tmpServs.size(); j++) {
+        res = sendto(sockfd, &sayToServMsg, sizeof(sayToServMsg), 0, (struct sockaddr*)&tmpServs[j], sizeof tmpServs[j]);
+        if(res == -1) {
+            cout << "send to servers say msg fail.\n";
+        }     
+    }
+
+}
 //handle say requests
 int sayReq(struct request_say *rs)
 {
+    
     string channel = rs->req_channel;
     string message = rs->req_text;
     string username = getUserOfCurrAddr();
+    sendS2SSay(rs, username);
     struct sockaddr_in fromAddr = getAddrStruct();
     map<string,vector<pair<string,struct sockaddr_in> > >::iterator hit = chanTlkUser.find(channel);
     if(hit == chanTlkUser.end()) {
