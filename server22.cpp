@@ -39,7 +39,6 @@ map<string,vector<pair<string,struct sockaddr_in> > > chanTlkUser;
 map<string,vector<struct sockaddr_in> > chanTlkServer;
 vector<string> channels;
 vector<struct sockaddr_in> neighborServers;
-vector<long long> msgIds;
 //methods
 string stringAddr(struct sockaddr_in);
 string getUserOfCurrAddr();
@@ -180,51 +179,6 @@ return 0;
 //server say
 int s2sSay(struct request_s2s_say *r) 
 {
-    // int ret; 
-    // // make it easy to access msg content
-    // struct s2s_say *msg;
-    // msg = (struct s2s_say*) data;
-
-    // // initialize all the message content to local variables
-    // long long uniqueID = htobe64(msg->s2s_uniqueID);
-    // string channel  = msg->s2s_channel;
-    // string username = msg->s2s_username;
-    // string text     = msg->s2s_text; 
-    
-    // // initialize all of the ipaddr and port stuff
-    // string ip = inet_ntoa(sock.sin_addr);
-    // int srcport = ntohs(sock.sin_port);
-    // char port_str[6];
-    // sprintf(port_str, "%d", srcport);
-    // string key = ip + "." + port_str;
-    struct sockaddr_in fromAdr = getAddrStruct();
-    long long msgId = = htobe64(r->server_id);
-    for(int i=0; i<msgIds.size(); i++) {
-        if(msgIds[i] == msgId){
-            cout << "dup message :\n";
-            //send LEAVE back to requester addr
-            return -1;
-        }
-    }
-    string chan = r->req_s2s_channel;
-    string user = r->req_s2s_username;
-    string msg =  r->req_s2s_msg;
-    map<string,vector<struct sockaddr_in> >::iterator j = chanTlkServer.find(chan);
-    if(j == chanTlkServer.end()) {
-        cout << "error finding channel to say \n";
-        return -1;
-    }
-    vector<struct sockaddr_in> tmpServs = j->second;
-    int check = 0;
-    int res = 0;
-    for(int n=0; n<tmpServs.size(); n++) {
-        if((check = checkAddrEq(tmpServs[n], fromAdr)) == -1) {
-            res = sendto(sockfd, r, sizeof(*r), 0, (struct sockaddr*)&(tmpServs[n]), sizeof(tmpServs[n]));
-            if(res == -1) {
-                cout << "send to servers say msg fail ahh.\n";
-            }   
-        }
-    }
 
 return 0;
 
@@ -301,15 +255,15 @@ int sendS2SSay(struct request_say *r, string username)
     sayToServMsg.server_id = be64toh(id);
     strcpy(sayToServMsg.req_s2s_channel, channel.c_str());
     strcpy(sayToServMsg.req_s2s_username, username.c_str());
-    strncpy(sayToServMsg.req_s2s_msg, message.c_str(), SAY_MAX);
-    msgIds.push_back(id);
+    strncpy(sayToServMsg.req_s2s_text, r->req_text.c_str(), SAY_MAX);
+
     map<string,vector<struct sockaddr_in> >::iterator i = chanTlkServer.find(channel);
     if(i == chanTlkServer.end()) {
         cout << "error finding channel to say to in channel to server map.\n";
         return -1;
     }  
     vector<struct sockaddr_in> tmpServs = i->second;
-    int res = 0;
+    int res = 0m
     for(int j=0; j<tmpServs.size(); j++) {
         res = sendto(sockfd, &sayToServMsg, sizeof(sayToServMsg), 0, (struct sockaddr*)&tmpServs[j], sizeof tmpServs[j]);
         if(res == -1) {

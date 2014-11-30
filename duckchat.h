@@ -154,7 +154,7 @@ struct request_s2s_say {
         int server_id;
         char req_s2s_channel[CHANNEL_MAX]; 
         char req_s2s_username[USERNAME_MAX];
-        char req_s2s_text[SAY_MAX];
+        char req_s2s_msg[SAY_MAX];
 } packed;
 
 #endif
