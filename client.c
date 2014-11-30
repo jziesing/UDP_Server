@@ -383,6 +383,7 @@ int send_who_message(char* channel)
 
 int send_say_message(char* text)
 {
+	cout << "earth TESTTTTT : JJJ\n";
 	ssize_t bytes;
 	void *data;
 	size_t len;
