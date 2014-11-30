@@ -177,7 +177,7 @@ int s2sLeave(struct request_s2s_leave *r)
 
 return 0;
 }
-//server say
+//receavi server say
 int s2sSay(struct request_s2s_say *r) 
 {
     // int ret; 
@@ -198,7 +198,7 @@ int s2sSay(struct request_s2s_say *r)
     // sprintf(port_str, "%d", srcport);
     // string key = ip + "." + port_str;
     struct sockaddr_in fromAdr = getAddrStruct();
-    long long msgId = = htobe64(r->server_id);
+    long long msgId =  htobe64(r->server_id);
     for(int i=0; i<msgIds.size(); i++) {
         if(msgIds[i] == msgId){
             cout << "dup message :\n";
@@ -208,7 +208,7 @@ int s2sSay(struct request_s2s_say *r)
     }
     string chan = r->req_s2s_channel;
     string user = r->req_s2s_username;
-    string msg =  r->req_s2s_msg;
+    string mess =  r->req_s2s_msg;
     map<string,vector<struct sockaddr_in> >::iterator j = chanTlkServer.find(chan);
     if(j == chanTlkServer.end()) {
         cout << "error finding channel to say \n";
@@ -225,6 +225,29 @@ int s2sSay(struct request_s2s_say *r)
             }   
         }
     }
+    map<string,vector<pair<string,struct sockaddr_in> > >::iterator hit = chanTlkUser.find(chan);
+    if(hit == chanTlkUser.end()) {
+        cout << "error with finding channel n user map channel \n";
+        return -1; 
+    }
+    vector<pair<string,struct sockaddr_in> > tmpU = hit->second;
+    for(int i=0; i<tmpU.size(); i++) {
+        struct sockaddr_in address;
+        void *goData;
+        address = tmpU[i].second;
+        struct text_say msg;
+        msg.txt_type= TXT_SAY;
+        strncpy(msg.txt_username, user.c_str(), sizeof(user));
+        strncpy(msg.txt_text, mess.c_str(), sizeof(mess));
+        strncpy(msg.txt_channel, chan.c_str(), sizeof(chan));
+        int size = sizeof(struct sockaddr*);
+        goData = &msg;
+        int res= sendto(sockfd, goData, sizeof(msg), 0, (struct sockaddr*)&address, sizeof(address));
+        if (res == -1) {
+            return -1;
+        }
+    }
+    tmpU.clear();
 
 return 0;
 
