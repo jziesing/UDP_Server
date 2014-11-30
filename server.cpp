@@ -500,17 +500,22 @@ int joinReq(struct request_join *rj)
     return 0;
 }
 //handle login requests
+//NEED TO ADD SERVER LOGIC  to send s2s leave
 int leaveReq(struct request_leave *rl)
 {
+    //tmp vars
     string username = getUserOfCurrAddr();
     struct sockaddr_in reqAddr = getAddrStruct();
     string chaNel = (string)(rl->req_channel);
     multimap<string, struct sockaddr_in>::iterator ui = userToAddrStrct.find(username);
+    //find user address
     struct sockaddr_in address = ui->second;
     map<string,vector<pair<string,struct sockaddr_in> > >::iterator vi;
+    //check if channel is there
     if((vi = chanTlkUser.find(chaNel)) == chanTlkUser.end()) {
         return -1;
     }
+    //delete user from vector of userrs that belongs specific channel
     vector<pair<string,struct sockaddr_in> > v = vi->second;
     for(int vecI=0; vecI<v.size(); vecI++) {
         if(v[vecI].first == username) {
@@ -519,7 +524,9 @@ int leaveReq(struct request_leave *rl)
             } 
         }
     }
+    //erase old entry of channel with list of users 
     chanTlkUser.erase(vi);
+    //don't insert channel if they are the last users on channel
     if(v.size() != 0) {
         chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(chaNel,v));
         return 0;
