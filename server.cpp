@@ -170,40 +170,56 @@ int req_s2sJoin(struct request_s2s_join *r)
     }
     return 0;
 }
-//server leave
+//server reveive leave
 int s2sLeave(struct request_s2s_leave *r) 
 {
+    string channel = r->req_s2s_channel;
+    struct sockaddr_in senderAddr = getAddrStruct();
+    map<string,vector<struct sockaddr_in> >::iterator i = chanTlkServer.find(channel);
+    if(i == chanTlkServer.end()) {
+        cout << "error can't find channel to leave when server s2sleave is receveived\n";
+        return -1;
+    }
+    vector<struct sockaddr_in> tmpServs;
+    int check = 0;
+    for(int j=0; j<i->second.size(); j++) {
+        if((check = checkAddrEq(senderAddr,i->second[j])) == -1) {
+            tmpServs.push_back(i->second[j]);
+        }
+    }
+    chanTlkServer.erase(channel);
+    chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(channel,tmpServs));
+    return 0;
+}
+//server send leave msg
+int sendS2sLeave(struct sockaddr_in sender, string channel) 
+{
+    struct request_s2s_leave leaveMsg;
+    leaveMsg.req_type = htonl(S2S_LEAVE);
+    strcpy(leaveMsg.req_s2s_channel, channel.c_str());
+    int res = sendto(sockfd, &leaveMsg, sizeof(leaveMsg), 0,(struct sockaddr*)&sender, sizeof(sender));
+    if(res == -1) {
+        cout << "error sending leave\n";
+        return -1;
+    }
+    return 0;
 
-
-return 0;
 }
 //receavi server say
 int s2sSay(struct request_s2s_say *r) 
 {
-    // int ret; 
-    // // make it easy to access msg content
-    // struct s2s_say *msg;
-    // msg = (struct s2s_say*) data;
-
-    // // initialize all the message content to local variables
-    // long long uniqueID = htobe64(msg->s2s_uniqueID);
-    // string channel  = msg->s2s_channel;
-    // string username = msg->s2s_username;
-    // string text     = msg->s2s_text; 
-    
-    // // initialize all of the ipaddr and port stuff
-    // string ip = inet_ntoa(sock.sin_addr);
-    // int srcport = ntohs(sock.sin_port);
-    // char port_str[6];
-    // sprintf(port_str, "%d", srcport);
-    // string key = ip + "." + port_str;
     struct sockaddr_in fromAdr = getAddrStruct();
     long long msgId =  htobe64(r->server_id);
     for(int i=0; i<msgIds.size(); i++) {
         if(msgIds[i] == msgId){
             cout << "dup message :\n";
             //send LEAVE back to requester addr
-            return -1;
+            int hector = sendS2sLeave(fromAdr, (string)r->req_s2s_channel);
+            if(hector == -1) {
+                cout << "error sending leave back b/c dup msg \n";
+                return -1;
+            }
+            return 0;
         }
     }
     string chan = r->req_s2s_channel;
