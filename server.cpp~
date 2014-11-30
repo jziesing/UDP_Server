@@ -254,7 +254,7 @@ int sendS2SSay(struct request_say *r, string username)
     sayToServMsg.server_id = be64toh(id);
     strcpy(sayToServMsg.req_s2s_channel, channel.c_str());
     strcpy(sayToServMsg.req_s2s_username, username.c_str());
-    strncpy(sayToServMsg.req_s2s_text, message.c_str(), SAY_MAX);
+    strncpy(sayToServMsg.req_s2s_text, r->req_text.c_str(), SAY_MAX);
 
     map<string,vector<struct sockaddr_in> >::iterator i = chanTlkServer.find(channel);
     if(i == chanTlkServer.end()) {
