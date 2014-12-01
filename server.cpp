@@ -130,10 +130,14 @@ int sendS2SJoin_Except(string channel, sockaddr_in sender)
     strncpy(server_join.req_s2s_channel, channel.c_str(), CHANNEL_MAX);
     server_join.req_type = htonl(S2S_JOIN);
     int check = 0;
+    map<string,vector<struct sockaddr_in> >::iterator ji = chanTlkServer.find(channel);
+    vector<struct sockaddr_in> tempSes = ji->second;
     //vector<struct sockaddr_in>::iterator i;
     for(int i=0; i <neighborServers.size(); i++) {
         if((check = checkAddrEq(neighborServers[i], sender)) == -1) {
+
             int res = sendto(sockfd, &server_join, sizeof(server_join), 0, (struct sockaddr*)&(neighborServers[i]), sizeof(&(neighborServers[i])));
+
             if(res == -1) {
                 cout << "error sending join to neighborServers\n";
                 return -1;
@@ -151,6 +155,11 @@ int req_s2sJoin(struct request_s2s_join *r)
     for(int i=0; i<channels.size(); i++) {
         if(channels[i] == chan) {
             //old channel
+            map<string,vector<struct sockaddr_in> >::iterator tmpIt = chanTlkServer.find(chan);
+            vector<struct sockaddr_in> tmpV = tmpIt->second;
+            tmpV.push_back(reqAddr);
+            chanTlkServer.erase(chan);
+            chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(chan,tmpV));
             return 0;
         }
     }
@@ -328,9 +337,8 @@ int checkValidAddr()
     }
     return -1;
 }
-int sendS2SSay(struct request_say *r, string username)
+int sendS2SSay(struct request_say *r, string username, string channel)
 {
-    string channel = r->req_channel;
     string message = r->req_text;
 
     long long id = rand();
@@ -364,7 +372,7 @@ int sayReq(struct request_say *rs)
     string channel = rs->req_channel;
     string message = rs->req_text;
     string username = getUserOfCurrAddr();
-    sendS2SSay(rs, username);
+    sendS2SSay(rs, username, channel);
     struct sockaddr_in fromAddr = getAddrStruct();
     map<string,vector<pair<string,struct sockaddr_in> > >::iterator hit = chanTlkUser.find(channel);
     if(hit == chanTlkUser.end()) {
@@ -445,6 +453,7 @@ int errorMsg(struct sockaddr_in addr, string msg)
        return 0;
     }
 }
+//sends s2s when userjoins server
 int sendS2SJoin(string channel) 
 {
 
@@ -505,6 +514,7 @@ int leaveReq(struct request_leave *rl)
 {
     //tmp vars
     string username = getUserOfCurrAddr();
+    sendS2sLeave
     struct sockaddr_in reqAddr = getAddrStruct();
     string chaNel = (string)(rl->req_channel);
     multimap<string, struct sockaddr_in>::iterator ui = userToAddrStrct.find(username);
@@ -529,7 +539,7 @@ int leaveReq(struct request_leave *rl)
     //don't insert channel if they are the last users on channel
     if(v.size() != 0) {
         chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(chaNel,v));
-        return 0;
+        //return 0;
     } else {
         for(int i=0; i<channels.size(); i++) {
             if(channels[i] == chaNel) {
