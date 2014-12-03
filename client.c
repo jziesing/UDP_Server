@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 			if (FD_ISSET(STDIN,&fds))
 			{
 				//printf("stdin input available\n");
-				cout << "earth TESTTTTT : 1\n";
+				//cout << "earth TESTTTTT : 1\n";
 				handle_user_input();
 				
 				user_data = 1;
@@ -384,7 +384,7 @@ int send_who_message(char* channel)
 
 int send_say_message(char* text)
 {
-	cout << "earth TESTTTTT : JJJ\n";
+	//cout << "earth TESTTTTT : JJJ\n";
 	ssize_t bytes;
 	void *data;
 	size_t len;
@@ -415,7 +415,7 @@ void handle_user_input()
 {
 		//write reading from stdin into a separate function
 		// -body of the loop
-		cout << "earth TESTTTTT : 2\n";
+		//cout << "earth TESTTTTT : 2\n";
 		int count = 0;
 		char userinput[SAY_MAX];
 		char c = '\0';
@@ -643,11 +643,11 @@ void handle_server_input()
 		text_t message_type = recv_text->txt_type;
 		//printf("%d", message_type);
 		//printf("\n");
-		cout << "earth TESTTTTT : 3\n";
+		//cout << "earth TESTTTTT : 3\n";
 
 		if (message_type == TXT_SAY)
 		{
-			cout << "earth TESTTTTT : 4\n";
+			//cout << "earth TESTTTTT : 4\n";
 			struct text_say* say_text;
 			say_text = (struct text_say*)data;
 			//printf("Say message :");

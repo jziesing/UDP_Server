@@ -33,6 +33,7 @@ struct sockaddr recAddr;
 socklen_t fromlen = sizeof(recAddr);
 int sockfd;
 struct addrinfo *addrAr;
+fd_set  fdWait;
 map<string,vector<string> > usrTlkChan;
 multimap<string,struct sockaddr_in> userToAddrStrct;
 map<string,vector<pair<string,struct sockaddr_in> > > chanTlkUser;
@@ -84,23 +85,39 @@ int main(int argc, char **argv)
             addNeighborServers(argv[i], argv[i+1]);
         }
     }
+    int req_tester = 0;
+    struct timeval waitTime;
     while(1)
     {
         cout << "\n"; 
         char *buf = new char[BUFLEN];
         struct request *requests = (struct request*)malloc(sizeof(struct request*) + BUFLEN);  
         int bal = 0;
+        int selCheck = 0;
+        cout << "Printing last callll.\n";
+        FD_ZERO(&fdWait);
+        FD_SET(sockfd, &fdWait);
+        waitTime.tv_usec = 0;
+        selCheck = select(sockfd+1, &fdWait, NULL, NULL, &waitTime);
+        if(selCheck < 0) {
+            cout << "should be error !!! \n";
+        }
         bal = recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&recAddr, &fromlen);
+        cout << "Printing SECOND TO last callll.\n";
+
         if(bal > 0) {
             requests = (request*) buf;
-            readRequestType(requests, bal);
+            req_tester = readRequestType(requests, bal);
+            if(req_tester != 0 ) {
+                cout << "whoooaaaa jackoo\n";
+            }
         } 
-        cout << "Printing Neightbor Servers.\n";
-        for(int n=0; n<neighborServers.size(); n++) {
-            //cout << itoa(neighborServers[n]) << " : \n";
-            cout << n << " : \n";
+        // cout << "Printing Neightbor Servers.\n";
+        // for(int n=0; n<neighborServers.size(); n++) {
+        //     //cout << itoa(neighborServers[n]) << " : \n";
+        //     cout << n << " : \n";
 
-        }
+        // }
         cout << "Printing chanTlkUser.\n";
         map<string,vector<pair<string,struct sockaddr_in> > >::iterator him;
         for(him = chanTlkUser.begin(); him != chanTlkUser.end(); him++) {
@@ -109,17 +126,22 @@ int main(int argc, char **argv)
                 cout << him->second[j].first << " : is a user.\n";
             }
         }
-        cout << "Printing chanTlkServer.\n";
-        cout << chanTlkServer.size() << " : server size\n";
-        map<string,vector<struct sockaddr_in> >::iterator kin;
-        for(kin = chanTlkServer.begin(); kin != chanTlkServer.end(); kin++) {
-            cout << kin->first << " : channel has servers..\n";
-            for(int j=0; j<kin->second.size(); j++) {
-                cout << stringAddr(kin->second[j]) << " : is a server.\n";
-            }
+        cout << "Printing channels global array\n";
+        for(int i=0; i<channels.size(); i++) {
+            cout << "channel is : " << channels[i] << "\n";
         }
+        // cout << "Printing chanTlkServer.\n";
+        // cout << chanTlkServer.size() << " : server size\n";
+        // map<string,vector<struct sockaddr_in> >::iterator kin;
+        // for(kin = chanTlkServer.begin(); kin != chanTlkServer.end(); kin++) {
+        //     cout << kin->first << " : channel has servers..\n";
+        //     for(int j=0; j<kin->second.size(); j++) {
+        //         cout << stringAddr(kin->second[j]) << " : is a server.\n";
+        //     }
+        // }
        delete[] buf;   
     }
+     
     return 0;
 }
 
@@ -381,12 +403,13 @@ int sayReq(struct request_say *rs)
     vector<pair<string,struct sockaddr_in> > tmpU = hit->second;
     for(int i=0; i<tmpU.size(); i++) {
         struct sockaddr_in address;
+        cout << i << " is user number\n";
         void *goData;
         address = tmpU[i].second;
         struct text_say msg;
         msg.txt_type= TXT_SAY;
         strncpy(msg.txt_username, username.c_str(), sizeof(username));
-        strncpy(msg.txt_text, message.c_str(), sizeof(message));
+        strcpy(msg.txt_text, message.c_str());
         strncpy(msg.txt_channel, channel.c_str(), sizeof(channel));
         int size = sizeof(struct sockaddr*);
         goData = &msg;
@@ -514,7 +537,7 @@ int leaveReq(struct request_leave *rl)
 {
     //tmp vars
     string username = getUserOfCurrAddr();
-    sendS2sLeave
+    //sendS2sLeave
     struct sockaddr_in reqAddr = getAddrStruct();
     string chaNel = (string)(rl->req_channel);
     multimap<string, struct sockaddr_in>::iterator ui = userToAddrStrct.find(username);
@@ -547,6 +570,17 @@ int leaveReq(struct request_leave *rl)
             }
         }
     }
+
+    map<string,vector<struct sockaddr_in> >::iterator servIt;
+    if((servIt = chanTlkServer.find(chaNel)) == chanTlkServer.end()) {
+        return -1;
+    }
+    vector<struct sockaddr_in> servTmps = servIt->second;
+    for(int i=0; i<servTmps.size(); i++) {
+        //if()
+    }
+
+
     vector<string> chanTlk = usrTlkChan[username];
     for(int vv=0; vv<chanTlk.size(); vv++) {
         if(chanTlk[vv] == chaNel) {
@@ -624,6 +658,7 @@ int readRequestType(struct request *r, int b)
     //check if request address is valid
     if(netHost != 0) {
         if(checkValidAddr() == -1) {
+            cout << "is this it???\n";
             return -1;
         } 
     }
@@ -657,12 +692,13 @@ int readRequestType(struct request *r, int b)
                 break;
             }
         case REQ_SAY:
-            if(sizeof(struct request_say) == b) {
+            //if(sizeof(struct request_say) == b) {
+                cout << "got a say rrreeeqqq\n"; 
                 fin = sayReq((struct request_say*) r);
                 break;
-            } else {
-                break;
-            }
+          //  } else {
+             //   break;
+           // }
         case REQ_LIST:
             if(sizeof(struct request_list) == b) {
                 fin = listReq((struct request_list*) r);
@@ -699,6 +735,7 @@ int readRequestType(struct request *r, int b)
                 break;
             }
         default:
+
             break;
     }
     return fin;
