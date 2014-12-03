@@ -63,7 +63,7 @@ int s2sLeave(struct request_s2s_leave*);
 int s2sSay(struct request_s2s_say*);
 int sendS2SJoin(string);
 int sendS2SJoin_Except(string,sockaddr_in); 
-int sendS2SSay(struct request_say*,string);
+int sendS2SSay(struct request_say*,string,string);
 //int checkAddrEq_Server(struct sockaddr_in,struct sockaddr_in);
 
 //program
@@ -285,7 +285,7 @@ int s2sSay(struct request_s2s_say *r)
         struct text_say msg;
         msg.txt_type= TXT_SAY;
         strncpy(msg.txt_username, user.c_str(), sizeof(user));
-        strncpy(msg.txt_text, mess.c_str(), sizeof(mess));
+        strcpy(msg.txt_text, mess.c_str());
         strncpy(msg.txt_channel, chan.c_str(), sizeof(chan));
         int size = sizeof(struct sockaddr*);
         goData = &msg;
@@ -359,18 +359,13 @@ int checkValidAddr()
     }
     return -1;
 }
-int sendS2SSay(struct request_say *r, string username, string channel)
+int sendS2SSay(struct request_say *r, string username, string channel, string message)
 {
-    string message = r->req_text;
+    //string message = r->req_text;
 
     long long id = rand();
     id = id << 32 | rand();
-    struct request_s2s_say sayToServMsg;
-    sayToServMsg.req_type = htonl(S2S_SAY);
-    sayToServMsg.server_id = be64toh(id);
-    strcpy(sayToServMsg.req_s2s_channel, channel.c_str());
-    strcpy(sayToServMsg.req_s2s_username, username.c_str());
-    strncpy(sayToServMsg.req_s2s_msg, message.c_str(), SAY_MAX);
+    
     msgIds.push_back(id);
     map<string,vector<struct sockaddr_in> >::iterator i = chanTlkServer.find(channel);
     if(i == chanTlkServer.end()) {
@@ -379,8 +374,18 @@ int sendS2SSay(struct request_say *r, string username, string channel)
     }  
     vector<struct sockaddr_in> tmpServs = i->second;
     int res = 0;
+    
     for(int j=0; j<tmpServs.size(); j++) {
-        res = sendto(sockfd, &sayToServMsg, sizeof(sayToServMsg), 0, (struct sockaddr*)&tmpServs[j], sizeof tmpServs[j]);
+        struct request_s2s_say sayToServMsg;
+        sayToServMsg.req_type = htonl(S2S_SAY);
+        sayToServMsg.server_id = be64toh(id);
+        strncpy(sayToServMsg.req_s2s_channel, channel.c_str(), sizeof(channel));
+        strncpy(sayToServMsg.req_s2s_username, username.c_str(), sizeof(username));
+        strcpy(sayToServMsg.req_s2s_msg, message.c_str());
+        void *goData;
+        goData = &sayToServMsg;
+
+        res = sendto(sockfd, goData, sizeof(sayToServMsg), 0, (struct sockaddr*)&(tmpServs[j]), sizeof(tmpServs[j]));
         if(res == -1) {
             cout << "send to servers say msg fail.\n";
         }     
@@ -394,7 +399,7 @@ int sayReq(struct request_say *rs)
     string channel = rs->req_channel;
     string message = rs->req_text;
     string username = getUserOfCurrAddr();
-    sendS2SSay(rs, username, channel);
+    sendS2SSay(rs, username, channel, message);
     struct sockaddr_in fromAddr = getAddrStruct();
     map<string,vector<pair<string,struct sockaddr_in> > >::iterator hit = chanTlkUser.find(channel);
     if(hit == chanTlkUser.end()) {
