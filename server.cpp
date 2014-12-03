@@ -585,14 +585,17 @@ int leaveReq(struct request_leave *rl)
         //if()
     }
 
-
-    vector<string> chanTlk = usrTlkChan[username];
-    for(int vv=0; vv<chanTlk.size(); vv++) {
-        if(chanTlk[vv] == chaNel) {
-            chanTlk.erase(chanTlk.begin()+vv);
+    map<string,vector<string> >::iterator hii = usrTlkChan.find(username);
+    vector<string> chanTlk;
+    for(int vv=0; vv<hii->second.size(); vv++) {
+        if(hii->second[vv] != chaNel) {
+            //chanTlk.erase(chanTlk.begin()+vv);
+            chanTlk.push_back(hii->second[vv]);
         }
     }
-    usrTlkChan[username] = chanTlk;
+    usrTlkChan.erase(username);
+    usrTlkChan.insert(pair<string,vector<string> >(username,chanTlk));
+    //usrTlkChan[username] = chanTlk;
     return 0;
 }
 //handle login requests
