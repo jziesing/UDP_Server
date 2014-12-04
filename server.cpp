@@ -405,6 +405,7 @@ int sayReq(struct request_say *rs)
     if(hit == chanTlkUser.end()) {
         return -1; 
     }
+    cout    << "this is asssaayyyyyy unn\n";
     vector<pair<string,struct sockaddr_in> > tmpU = hit->second;
     for(int i=0; i<tmpU.size(); i++) {
         struct sockaddr_in address;
@@ -545,9 +546,9 @@ int leaveReq(struct request_leave *rl)
     //sendS2sLeave
     struct sockaddr_in reqAddr = getAddrStruct();
     string chaNel = (string)(rl->req_channel);
-    multimap<string, struct sockaddr_in>::iterator ui = userToAddrStrct.find(username);
+    //multimap<string, struct sockaddr_in>::iterator ui = userToAddrStrct.find(username);
     //find user address
-    struct sockaddr_in address = ui->second;
+    //struct sockaddr_in address = ui->second;
     map<string,vector<pair<string,struct sockaddr_in> > >::iterator vi;
     //check if channel is there
     if((vi = chanTlkUser.find(chaNel)) == chanTlkUser.end()) {
@@ -563,7 +564,7 @@ int leaveReq(struct request_leave *rl)
         }
     }
     //erase old entry of channel with list of users 
-    chanTlkUser.erase(vi);
+    chanTlkUser.erase(chaNel);
     //don't insert channel if they are the last users on channel
     if(v.size() != 0) {
         chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(chaNel,v));
@@ -576,14 +577,14 @@ int leaveReq(struct request_leave *rl)
         }
     }
 
-    map<string,vector<struct sockaddr_in> >::iterator servIt;
-    if((servIt = chanTlkServer.find(chaNel)) == chanTlkServer.end()) {
-        return -1;
-    }
-    vector<struct sockaddr_in> servTmps = servIt->second;
-    for(int i=0; i<servTmps.size(); i++) {
-        //if()
-    }
+    // map<string,vector<struct sockaddr_in> >::iterator servIt;
+    // if((servIt = chanTlkServer.find(chaNel)) == chanTlkServer.end()) {
+    //     return -1;
+    // }
+    // vector<struct sockaddr_in> servTmps = servIt->second;
+    // for(int i=0; i<servTmps.size(); i++) {
+    //     //if()
+    // }
 
     map<string,vector<string> >::iterator hii = usrTlkChan.find(username);
     vector<string> chanTlk;
