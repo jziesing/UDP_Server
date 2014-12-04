@@ -570,11 +570,11 @@ int leaveReq(struct request_leave *rl)
         return -1;
     }
     //delete user from vector of userrs that belongs specific channel
-    vector<pair<string,struct sockaddr_in> > v; = vi->second;
+    vector<pair<string,struct sockaddr_in> > v;
     for(int vecI=0; vecI<vi->second.size(); vecI++) {
-        if(v[vecI].first != username) {
-            if(checkAddrEq(v[vecI].second, reqAddr) != 0) {
-                v.push_back();
+        if(vi->second[vecI].first != username) {
+            if(checkAddrEq(vi->second[vecI].second, reqAddr) != 0) {
+                v.push_back(vi->second[vecI]);
             }
         }
     }
