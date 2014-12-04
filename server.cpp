@@ -88,31 +88,29 @@ int main(int argc, char **argv)
         }
     }
     int req_tester = 0;
-    struct timeval waitTime;
     while(1)
     {
         cout << "\n"; 
-          
         int bal = 0;
         int selCheck = 0;
         cout << "Printing last callll.\n";
-        // FD_ZERO(&fdWait);
-        // FD_SET(STDIN, &fdWait);
-        // FD_SET(sockfd, &fdWait);
-        // waitTime.tv_usec = 0;
-        // selCheck = select(sockfd+1, &fdWait, NULL, NULL, NULL);
-        // if(selCheck < 0) {
-        //     cout << "should be error !!! \n";
-        // }
-        // if(FD_ISSET(sockfd,&fdWait)) {
+        FD_ZERO(&fdWait);
+        FD_SET(STDIN, &fdWait);
+        FD_SET(sockfd, &fdWait);
+        selCheck = select(sockfd+1, &fdWait, NULL, NULL, NULL);
+        if(selCheck < 0) {
+            cout << "should be error !!! \n";
+        }
+        if(FD_ISSET(sockfd,&fdWait)) {
             void *buf;
             size_t uniqLen;
-            cout << "Printing SECOND TO last callll.\n";
+            cout << "Printing SECOND TO last callll. fucjkkkaaa\n";
             struct request *requests;
             char recv_Text[MAX_MSG_LEN];
             buf = &recv_Text;
             uniqLen = sizeof recv_Text;
             fromlen = sizeof(recAddr);
+            cout << "Printing SECOND TO last callll. mujimaaaikkkkaaa\n";
              bal = recvfrom(sockfd, buf, uniqLen, 0, (struct sockaddr*)&recAddr, &fromlen);
             cout << "Printing SECOND TO last callll.\n";
 
@@ -125,7 +123,7 @@ int main(int argc, char **argv)
             } 
             //delete requests;
             //delete[] buf; 
-        //}
+        }
        
         // cout << "Printing Neightbor Servers.\n";
         // for(int n=0; n<neighborServers.size(); n++) {
@@ -572,11 +570,11 @@ int leaveReq(struct request_leave *rl)
         return -1;
     }
     //delete user from vector of userrs that belongs specific channel
-    vector<pair<string,struct sockaddr_in> > v = vi->second;
-    for(int vecI=0; vecI<v.size(); vecI++) {
-        if(v[vecI].first == username) {
-            if(checkAddrEq(v[vecI].second, reqAddr) == 0) {
-                v.erase (v.begin()+vecI);
+    vector<pair<string,struct sockaddr_in> > v; = vi->second;
+    for(int vecI=0; vecI<vi->second.size(); vecI++) {
+        if(v[vecI].first != username) {
+            if(checkAddrEq(v[vecI].second, reqAddr) != 0) {
+                v.push_back();
             }
         }
     }
@@ -586,7 +584,7 @@ int leaveReq(struct request_leave *rl)
     if(v.size() != 0) {
         chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(chaNel,v));
     //return 0;
-    } else {
+    } else if(v.size() == 0) {
         for(int i=0; i<channels.size(); i++) {
             if(channels[i] == chaNel) {
                 channels.erase(channels.begin()+i);
