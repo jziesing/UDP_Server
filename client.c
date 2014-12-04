@@ -618,9 +618,9 @@ void handle_server_input()
 	data = &recv_text;
 	len = sizeof recv_text;
 
-
+cout << "earth TESTTTTT : 4\n";
 	bytes = recvfrom(s, data, len, 0, (struct sockaddr*)&server, &fromlen);
-
+cout << "earth TESTTTTT : after recvefrommm\n";
 
 	if (bytes < 0)
 	{
@@ -647,7 +647,7 @@ void handle_server_input()
 
 		if (message_type == TXT_SAY)
 		{
-			//cout << "earth TESTTTTT : 4\n";
+			
 			struct text_say* say_text;
 			say_text = (struct text_say*)data;
 			//printf("Say message :");

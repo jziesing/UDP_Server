@@ -27,6 +27,8 @@
 #include "duckchat.h"
 //defined
 #define BUFLEN 1024
+ #define STDIN 0
+ #define MAX_MSG_LEN 65536
 using namespace std;
 //globals
 struct sockaddr recAddr;
@@ -90,28 +92,41 @@ int main(int argc, char **argv)
     while(1)
     {
         cout << "\n"; 
-        char *buf = new char[BUFLEN];
-        struct request *requests = (struct request*)malloc(sizeof(struct request*) + BUFLEN);  
+          
         int bal = 0;
         int selCheck = 0;
         cout << "Printing last callll.\n";
-        FD_ZERO(&fdWait);
-        FD_SET(sockfd, &fdWait);
-        waitTime.tv_usec = 0;
-        selCheck = select(sockfd+1, &fdWait, NULL, NULL, &waitTime);
-        if(selCheck < 0) {
-            cout << "should be error !!! \n";
-        }
-        bal = recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&recAddr, &fromlen);
-        cout << "Printing SECOND TO last callll.\n";
+        // FD_ZERO(&fdWait);
+        // FD_SET(STDIN, &fdWait);
+        // FD_SET(sockfd, &fdWait);
+        // waitTime.tv_usec = 0;
+        // selCheck = select(sockfd+1, &fdWait, NULL, NULL, NULL);
+        // if(selCheck < 0) {
+        //     cout << "should be error !!! \n";
+        // }
+        // if(FD_ISSET(sockfd,&fdWait)) {
+            void *buf;
+            size_t uniqLen;
+            cout << "Printing SECOND TO last callll.\n";
+            struct request *requests;
+            char recv_Text[MAX_MSG_LEN];
+            buf = &recv_Text;
+            uniqLen = sizeof recv_Text;
+            fromlen = sizeof(recAddr);
+             bal = recvfrom(sockfd, buf, uniqLen, 0, (struct sockaddr*)&recAddr, &fromlen);
+            cout << "Printing SECOND TO last callll.\n";
 
-        if(bal > 0) {
-            requests = (request*) buf;
-            req_tester = readRequestType(requests, bal);
-            if(req_tester != 0 ) {
-                cout << "whoooaaaa jackoo\n";
-            }
-        } 
+            if(bal > 0) {
+                requests = (request*)buf;
+                req_tester = readRequestType(requests, bal);
+                if(req_tester != 0 ) {
+                    cout << "whoooaaaa jackoo\n";
+                }
+            } 
+            //delete requests;
+            //delete[] buf; 
+        //}
+       
         // cout << "Printing Neightbor Servers.\n";
         // for(int n=0; n<neighborServers.size(); n++) {
         //     //cout << itoa(neighborServers[n]) << " : \n";
@@ -139,7 +154,8 @@ int main(int argc, char **argv)
         //         cout << stringAddr(kin->second[j]) << " : is a server.\n";
         //     }
         // }
-       delete[] buf;   
+
+         
     }
      
     return 0;
@@ -539,6 +555,7 @@ int joinReq(struct request_join *rj)
 }
 //handle login requests
 //NEED TO ADD SERVER LOGIC  to send s2s leave
+
 int leaveReq(struct request_leave *rl)
 {
     //tmp vars
@@ -560,15 +577,15 @@ int leaveReq(struct request_leave *rl)
         if(v[vecI].first == username) {
             if(checkAddrEq(v[vecI].second, reqAddr) == 0) {
                 v.erase (v.begin()+vecI);
-            } 
+            }
         }
     }
-    //erase old entry of channel with list of users 
+    //erase old entry of channel with list of users
     chanTlkUser.erase(chaNel);
     //don't insert channel if they are the last users on channel
     if(v.size() != 0) {
         chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(chaNel,v));
-        //return 0;
+    //return 0;
     } else {
         for(int i=0; i<channels.size(); i++) {
             if(channels[i] == chaNel) {
@@ -576,22 +593,20 @@ int leaveReq(struct request_leave *rl)
             }
         }
     }
-
     // map<string,vector<struct sockaddr_in> >::iterator servIt;
     // if((servIt = chanTlkServer.find(chaNel)) == chanTlkServer.end()) {
-    //     return -1;
+    // return -1;
     // }
     // vector<struct sockaddr_in> servTmps = servIt->second;
     // for(int i=0; i<servTmps.size(); i++) {
-    //     //if()
+    // //if()
     // }
-
     map<string,vector<string> >::iterator hii = usrTlkChan.find(username);
     vector<string> chanTlk;
     for(int vv=0; vv<hii->second.size(); vv++) {
         if(hii->second[vv] != chaNel) {
-            //chanTlk.erase(chanTlk.begin()+vv);
-            chanTlk.push_back(hii->second[vv]);
+    //chanTlk.erase(chanTlk.begin()+vv);
+        chanTlk.push_back(hii->second[vv]);
         }
     }
     usrTlkChan.erase(username);
