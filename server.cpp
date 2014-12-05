@@ -162,12 +162,11 @@ int sendS2SJoin_Except(string channel, sockaddr_in sender)
     strncpy(server_join.req_s2s_channel, channel.c_str(), CHANNEL_MAX);
     server_join.req_type = htonl(S2S_JOIN);
     int check = 0;
-    map<string,vector<struct sockaddr_in> >::iterator ji = chanTlkServer.find(channel);
-    vector<struct sockaddr_in> tempSes = ji->second;
     //vector<struct sockaddr_in>::iterator i;
+    vector<struct sockaddr_in> temporaServs;
     for(int i=0; i <neighborServers.size(); i++) {
         if((check = checkAddrEq(neighborServers[i], sender)) == -1) {
-
+            temporaServs.push_back(neighborServers[i]);
             int res = sendto(sockfd, &server_join, sizeof(server_join), 0, (struct sockaddr*)&(neighborServers[i]), sizeof(&(neighborServers[i])));
 
             if(res == -1) {
@@ -176,6 +175,7 @@ int sendS2SJoin_Except(string channel, sockaddr_in sender)
             }
         }
     }
+    chanTlkServer[channel] = temporaServs;
     return 0;
 }
 //handle request server join
@@ -190,8 +190,9 @@ int req_s2sJoin(struct request_s2s_join *r)
             map<string,vector<struct sockaddr_in> >::iterator tmpIt = chanTlkServer.find(chan);
             vector<struct sockaddr_in> tmpV = tmpIt->second;
             tmpV.push_back(reqAddr);
-            chanTlkServer.erase(chan);
-            chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(chan,tmpV));
+            //chanTlkServer.erase(chan);
+            //chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(chan,tmpV));
+            chanTlkServer[chan] = tmpV;
             return 0;
         }
     }
@@ -805,7 +806,7 @@ int readRequestType(struct request *r, int b)
             }
         case S2S_JOIN:
             if(sizeof(struct request_s2s_join) == b) {
-                cout << "S2S Join Request from server : " << stringAddr(getAddrStruct()) << ". On port : " << (int)getAddrStruct().sin_port << ". Joining Channel : " << ((struct request_s2s_join*)r)->req_s2s_channel << ".\n";
+                cout << "S2S Join Request from server : " << stringAddr(getAddrStruct()) << ". On port : " << (int)ntohs(getAddrStruct().sin_port) << ". Joining Channel : " << ((struct request_s2s_join*)r)->req_s2s_channel << ".\n";
                 fin = req_s2sJoin((struct request_s2s_join*) r);
                 break;
             } else {
