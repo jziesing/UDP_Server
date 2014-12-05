@@ -166,7 +166,6 @@ int main(int argc, char *argv[])
 			{
 				//printf("stdin input available\n");
 				//cout << "earth TESTTTTT : 1\n";
-				printf("this is HOPE : %s\n", active_channel);
 				handle_user_input();
 				
 				user_data = 1;
@@ -619,9 +618,7 @@ void handle_server_input()
 	data = &recv_text;
 	len = sizeof recv_text;
 
-cout << "earth TESTTTTT : 4\n";
 	bytes = recvfrom(s, data, len, 0, (struct sockaddr*)&server, &fromlen);
-cout << "earth TESTTTTT : after recvefrommm\n";
 
 	if (bytes < 0)
 	{
