@@ -43,6 +43,8 @@ map<string,vector<struct sockaddr_in> > chanTlkServer;
 vector<string> channels;
 vector<struct sockaddr_in> neighborServers;
 vector<long long> msgIds;
+string homeServerStringAddr;
+int homeServerPort;
 //methods
 string stringAddr(struct sockaddr_in);
 string getUserOfCurrAddr();
@@ -82,6 +84,8 @@ int main(int argc, char **argv)
         return -1;
     }
     connectToHomeSocket(argv[1], argv[2]);
+    homeServerStringAddr = (string)argv[1];
+    homeServerPort = atoi(argv[2]);
     if((argc-1) > 2) {
         for(int i=3; i<argc-1; i=i+2) {
             addNeighborServers(argv[i], argv[i+1]);
@@ -90,7 +94,6 @@ int main(int argc, char **argv)
     int req_tester = 0;
     while(1)
     {
-        cout << "\n"; 
         int bal = 0;
         int selCheck = 0;
         FD_ZERO(&fdWait);
@@ -114,42 +117,42 @@ int main(int argc, char **argv)
                 requests = (request*)buf;
                 req_tester = readRequestType(requests, bal);
                 if(req_tester != 0 ) {
-                    cout << "whoooaaaa jackoo\n";
+                    //cout << "whoooaaaa jackoo\n";
                 }
             } 
             //delete requests;
             //delete[] buf; 
         }
        
-        cout << "Printing Neightbor Servers.\n";
-        for(int n=0; n<neighborServers.size(); n++) {
-            //cout << itoa(neighborServers[n]) << " : \n";
-            cout << n << " : \n";
+        // cout << "Printing Neightbor Servers.\n";
+        // for(int n=0; n<neighborServers.size(); n++) {
+        //     //cout << itoa(neighborServers[n]) << " : \n";
+        //     cout << n << " : \n";
 
-        }
-        cout << "Printing chanTlkUser.\n";
-        map<string,vector<pair<string,struct sockaddr_in> > >::iterator him;
-        for(him = chanTlkUser.begin(); him != chanTlkUser.end(); him++) {
-            cout << him->first << " : channel has users..\n";
-            for(int j=0; j<him->second.size(); j++) {
-                cout << him->second[j].first << " : is a user.\n";
-            }
-        }
-        cout << "Printing channels global array\n";
-        for(int i=0; i<channels.size(); i++) {
-            cout << "channel is : " << channels[i] << "\n";
-        }
-        cout << "Printing chanTlkServer.\n";
-        cout << chanTlkServer.size() << " : server size\n";
-        map<string,vector<struct sockaddr_in> >::iterator kin;
-        for(kin = chanTlkServer.begin(); kin != chanTlkServer.end(); kin++) {
-            cout << kin->first << " : channel has servers #.. " << kin->second.size() << "\n";
-            for(int j=0; j<kin->second.size(); j++) {
-                cout << stringAddr(kin->second[j]) << " : is a server.\n";
-            }
-        }
+        // }
+        // cout << "Printing chanTlkUser.\n";
+        // map<string,vector<pair<string,struct sockaddr_in> > >::iterator him;
+        // for(him = chanTlkUser.begin(); him != chanTlkUser.end(); him++) {
+        //     cout << him->first << " : channel has users..\n";
+        //     for(int j=0; j<him->second.size(); j++) {
+        //         cout << him->second[j].first << " : is a user.\n";
+        //     }
+        // }
+        // cout << "Printing channels global array\n";
+        // for(int i=0; i<channels.size(); i++) {
+        //     cout << "channel is : " << channels[i] << "\n";
+        // }
+        // cout << "Printing chanTlkServer.\n";
+        // cout << chanTlkServer.size() << " : server size\n";
+        // map<string,vector<struct sockaddr_in> >::iterator kin;
+        // for(kin = chanTlkServer.begin(); kin != chanTlkServer.end(); kin++) {
+        //     cout << kin->first << " : channel has servers #.. " << kin->second.size() << "\n";
+        //     for(int j=0; j<kin->second.size(); j++) {
+        //         cout << stringAddr(kin->second[j]) << " : is a server.\n";
+        //     }
+        // }
 
-        cout << "END OF ROUND____\n";         
+        // cout << "END OF ROUND____\n";         
     }
      
     return 0;
@@ -167,7 +170,8 @@ int sendS2SJoin_Except(string channel, sockaddr_in sender)
     for(int i=0; i <neighborServers.size(); i++) {
         if((check = checkAddrEq(neighborServers[i], sender)) != 0) {
             
-            cout << "Sending S2S Join from server : " << stringAddr(neighborServers[i]) << ". On port : " << (int)ntohs(neighborServers[i].sin_port) << ".\n";
+            //cout << "Sending S2S Join from server : " << stringAddr(neighborServers[i]) << ". On port : " << (int)ntohs(neighborServers[i].sin_port) << ".\n";
+            cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(neighborServers[i]) <<  ":" << (int)ntohs(neighborServers[i].sin_port) << " send S2S Join " << channel << "\n";
             int res = sendto(sockfd, &server_join, sizeof(server_join), 0, (struct sockaddr*)&(neighborServers[i]), sizeof(neighborServers[i]));
             if(res == -1) {
                 cout << "error sending join to neighborServers\n";
@@ -244,7 +248,8 @@ int sendS2sLeave(struct sockaddr_in sender, string channel)
     struct request_s2s_leave leaveMsg;
     leaveMsg.req_type = htonl(S2S_LEAVE);
     strcpy(leaveMsg.req_s2s_channel, channel.c_str());
-     cout << "Sending S2S Leave from server : " << stringAddr(sender) << ". On port : " << (int)ntohs(sender.sin_port) << ".\n";
+     //cout << "Sending S2S Leave from server : " << stringAddr(sender) << ". On port : " << (int)ntohs(sender.sin_port) << ".\n";
+    cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(sender) <<  ":" << (int)ntohs(sender.sin_port) << " send S2S leave " << channel << "\n";
     int res = sendto(sockfd, &leaveMsg, sizeof(leaveMsg), 0,(struct sockaddr*)&sender, sizeof(sender));
     if(res == -1) {
         cout << "error sending leave\n";
@@ -277,7 +282,8 @@ int s2sSay(struct request_s2s_say *r)
     int res = 0;
     for(int n=0; n<tmpServs.size(); n++) {
         if((check = checkAddrEq(tmpServs[n], fromAdr)) == -1) {
-             cout << "Sending Say from user : " << user << ". To server : " << stringAddr(tmpServs[n]) << ".\n";
+             //cout << "Sending Say from user : " << user << ". To server : " << stringAddr(tmpServs[n]) << ".\n";
+        	cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(fromAdr) <<  ":" << (int)ntohs(fromAdr.sin_port) << " send S2S Say " << chan << "\n";
             res = sendto(sockfd, r, sizeof(*r), 0, (struct sockaddr*)&(tmpServs[n]), sizeof tmpServs[n]);
             if(res == -1) {
                 cout << "send to servers say msg fail ahh.\n";
@@ -301,7 +307,8 @@ int s2sSay(struct request_s2s_say *r)
         strncpy(msg.txt_channel, chan.c_str(), sizeof(chan));
         int size = sizeof(struct sockaddr*);
         goData = &msg;
-        cout << "Sending Say from user : " << user << ". To User : " << stringAddr(address) << ".\n";
+        //cout << "Sending Say from user : " << user << ". To User : " << stringAddr(address) << ".\n";
+        cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(fromAdr) <<  ":" << (int)ntohs(fromAdr.sin_port) << " send S2S Say " << chan << "\n";
         int res= sendto(sockfd, goData, sizeof(msg), 0, (struct sockaddr*)&address, sizeof(address));
         if (res == -1) {
             return -1;
@@ -398,11 +405,11 @@ int sendS2SSay(struct request_say *r, string username, string channel, string me
         return -1;
     }  
     vector<struct sockaddr_in> tmpServs = i->second;
-    cout << "size of chantlk server when inside sending s2s say at homeserver when user sends say size is : " << tmpServs.size() << "\n";
+    //cout << "size of chantlk server when inside sending s2s say at homeserver when user sends say size is : " << tmpServs.size() << "\n";
     int res = 0;
     
     for(int j=0; j<tmpServs.size(); j++) {
-        cout << "Sending S2SSay to server : " <<  stringAddr(tmpServs[j]) << ".\n";
+        //cout << "Sending S2SSay to server : " <<  stringAddr(tmpServs[j]) << ".\n";
         struct sockaddr_in tmpAddress;
         tmpAddress = tmpServs[j];
         struct request_s2s_say sayToServMsg;
@@ -413,7 +420,8 @@ int sendS2SSay(struct request_say *r, string username, string channel, string me
         strcpy(sayToServMsg.req_s2s_msg, message.c_str());
         void *goData;
         goData = &sayToServMsg;
-        cout << "Sending S2SSay to server : " <<  stringAddr(tmpServs[j]) << ".\n";
+        //cout << "Sending S2SSay to server : " <<  stringAddr(tmpServs[j]) << ".\n";
+        cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(tmpAddress) <<  ":" << (int)ntohs(tmpAddress.sin_port) << " send S2S Say " << channel << "\n";
         res = sendto(sockfd, goData, sizeof(sayToServMsg), 0, (struct sockaddr*)&tmpAddress, sizeof(tmpAddress));
         if(res == -1) {
             cout << "send to servers say msg fail.\n";
@@ -446,7 +454,8 @@ int sayReq(struct request_say *rs)
         strncpy(msg.txt_channel, channel.c_str(), sizeof(channel));
         int size = sizeof(struct sockaddr*);
         goData = &msg;
-        cout << "Sending TXT_Say to user address: " <<  stringAddr(address) << ". On Port : " << (int)ntohs(address.sin_port) << ".\n";
+        //cout << "Sending TXT_Say to user address: " <<  stringAddr(address) << ". On Port : " << (int)ntohs(address.sin_port) << ".\n";
+         cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(address) <<  ":" << (int)address.sin_port << " send Say " << channel << "\n";
         int res= sendto(sockfd, goData, sizeof(msg), 0, (struct sockaddr*)&address, sizeof(address));
         if (res == -1) {
             return -1;
@@ -591,6 +600,7 @@ int sendS2SJoin(string channel)
     // }
     for(int i=0; i<neighborServers.size(); i++) {
         tmpServers.push_back(neighborServers[i]);
+        cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(neighborServers[i]) <<  ":" << (int)ntohs(neighborServers[i].sin_port) << " send S2S Join " << channel << "\n";
         int res = sendto(sockfd, &server_join, sizeof(server_join), 0, (struct sockaddr*)&(neighborServers[i]), sizeof neighborServers[i]);
             if(res == -1) {
             cout << "error sending join to neighborServers\n";
@@ -712,6 +722,7 @@ int listReq(struct request_list *rl)
         strcpy(((msg->txt_channels)+i)->ch_channel, tstr);
     }
     int size = sizeof(struct sockaddr);
+    cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(address) <<  ":" << (int)ntohs(address.sin_port) << " send List\n";
     int res= sendto(sockfd, msg,  (sizeof(struct text_list)+(numCHAN *sizeof(struct channel_info))), 0, (struct sockaddr*)&address, size);
     if (res == -1) {
         return -1;
@@ -743,6 +754,7 @@ int whoReq(struct request_who *rw)
         strcpy(((msg->txt_users)+i)->us_username, tstr);
     }
     int size = sizeof(struct sockaddr);
+    cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(address) <<  ":" << (int)ntohs(address.sin_port) << " send Who " << chaNel << "\n";
     int res= sendto(sockfd, msg,  (sizeof(struct text_who)+(numCHAN* sizeof(struct user_info))), 0, (struct sockaddr*)&address, size);
     if (res == -1) {
         return -1;
@@ -771,7 +783,7 @@ int readRequestType(struct request *r, int b)
     switch(netHost) {
         case REQ_LOGIN:
             if(sizeof(struct request_login) == b) {
-                cout << "Login Request from user : " << (string)((struct request_login*)r)->req_username << ".\n";
+                cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)getAddrStruct().sin_port << " recv Request login " << getUserOfCurrAddr() << "\n";
                 fin = loginReq((struct request_login*) r);
                 break;
             } else {
@@ -779,7 +791,7 @@ int readRequestType(struct request *r, int b)
             } 
         case REQ_LOGOUT:
             if(sizeof(struct request_logout) == b) {
-                cout << "Logout Request from user : " << getUserOfCurrAddr() << ".\n";
+                 cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)ntohs(getAddrStruct().sin_port) << " recv Request logout " << getUserOfCurrAddr() << "\n";
                 fin = logoutReq((struct request_logout*) r);
                 break;
             } else {
@@ -787,7 +799,7 @@ int readRequestType(struct request *r, int b)
             }   
         case REQ_JOIN:
             if(sizeof(struct request_join) == b) {
-                cout << "Join Request from user : " << getUserOfCurrAddr() << ". Channel : " << ((struct request_join*)r)->req_channel << ".\n";
+                 cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)getAddrStruct().sin_port << " recv Request join " << getUserOfCurrAddr() << " " << ((struct request_join*)r)->req_channel << "\n";
                 fin = joinReq((struct request_join*) r);
                 break;
             } else {
@@ -795,7 +807,8 @@ int readRequestType(struct request *r, int b)
             }      
         case REQ_LEAVE:
             if(sizeof(struct request_leave) == b) {
-                cout << "Leave Request from user : " << getUserOfCurrAddr() << ". Channel : " << ((struct request_join*)r)->req_channel << ".\n";
+               cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)ntohs(getAddrStruct().sin_port) << " recv Request leave " << getUserOfCurrAddr() << " " << ((struct request_leave*)r)->req_channel << "\n";
+                
                 fin = leaveReq((struct request_leave*) r);
                 break;
             } else {
@@ -803,7 +816,7 @@ int readRequestType(struct request *r, int b)
             }
         case REQ_SAY:
             if(sizeof(struct request_say) == b) {
-                cout << "Say Request from user : " << getUserOfCurrAddr() << ". On channel : " << ((struct request_join*)r)->req_channel << ".\n";
+                cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)getAddrStruct().sin_port << " recv Request say " << getUserOfCurrAddr() << " " << ((struct request_say*)r)->req_channel << "\n";
                 fin = sayReq((struct request_say*) r);
                 break;
            } else {
@@ -811,7 +824,7 @@ int readRequestType(struct request *r, int b)
            }
         case REQ_LIST:
             if(sizeof(struct request_list) == b) {
-                cout << "List Request from user : " << getUserOfCurrAddr() << ".\n";
+                 cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)ntohs(getAddrStruct().sin_port) << " recv Request list " << getUserOfCurrAddr() << "\n";
                 fin = listReq((struct request_list*) r);
                 break;
             } else {
@@ -819,7 +832,7 @@ int readRequestType(struct request *r, int b)
             }
         case REQ_WHO:
             if(sizeof(struct request_who) == b) {
-                cout << "Who Request from user : " << getUserOfCurrAddr() << ". For channel : " << ((struct request_join*)r)->req_channel << ".\n";
+                 cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)ntohs(getAddrStruct().sin_port) << " recv Request who " << getUserOfCurrAddr() << " " << ((struct request_who*)r)->req_channel << "\n";
                 fin = whoReq((struct request_who*) r);
                 break;
             } else {
@@ -827,24 +840,24 @@ int readRequestType(struct request *r, int b)
             }
         case S2S_JOIN:
             if(sizeof(struct request_s2s_join) == b) {
-                cout << "S2S Join Request from server : " << stringAddr(getAddrStruct()) << ". On port : " << (int)ntohs(getAddrStruct().sin_port) << ". Joining Channel : " << ((struct request_s2s_join*)r)->req_s2s_channel << ".\n";
-                fin = req_s2sJoin((struct request_s2s_join*) r);
+                cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)ntohs(getAddrStruct().sin_port) << " recv S2S Join " << ((struct request_s2s_join*)r)->req_s2s_channel << "\n";
+               fin = req_s2sJoin((struct request_s2s_join*) r);
                 break;
             } else {
                 break;
             }
         case S2S_LEAVE:
             if(sizeof(struct request_s2s_leave) == b) {
-                cout << "S2S Leave Request from server : " << stringAddr(getAddrStruct()) << ". On port : " << (int)ntohs(getAddrStruct().sin_port) << ". Leaving Channel : " << ((struct request_s2s_leave*)r)->req_s2s_channel << ".\n";
-                fin = s2sLeave((struct request_s2s_leave*) r);
+                cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)ntohs(getAddrStruct().sin_port) << " recv S2S Leave " << ((struct request_s2s_leave*)r)->req_s2s_channel << "\n";
+               fin = s2sLeave((struct request_s2s_leave*) r);
                 break;
             } else {
                 break;
             }
         case S2S_SAY:
             if(sizeof(struct request_s2s_say) == b) {
-                cout << "S2S Say Request from server : " << stringAddr(getAddrStruct()) << ". On port : " << (int)ntohs(getAddrStruct().sin_port) << ". Saying on Channel : " << ((struct request_s2s_say*)r)->req_s2s_channel << ".\n";
-                fin = s2sSay((struct request_s2s_say*) r);
+                cout << homeServerStringAddr << ":" << homeServerPort << " " << stringAddr(getAddrStruct()) <<  ":" << (int)ntohs(getAddrStruct().sin_port) << " recv S2S Say " << ((struct request_s2s_say*)r)->req_s2s_channel << "\n";
+               fin = s2sSay((struct request_s2s_say*) r);
                 break;
             } else {
                 break;
