@@ -254,12 +254,6 @@ int s2sSay(struct request_s2s_say *r)
     for(int i=0; i<msgIds.size(); i++) {
         if(msgIds[i] == msgId){
             cout << "dup message :\n";
-            //send LEAVE back to requester addr
-            //int hector = sendS2sLeave(fromAdr, (string)r->req_s2s_channel);
-            //if(hector == -1) {
-            //     cout << "error sending leave back b/c dup msg \n";
-            //     return -1;
-            // }
             return 0;
         }
     }
@@ -304,13 +298,18 @@ int s2sSay(struct request_s2s_say *r)
             return -1;
         }
     }
-    //tmpU.clear();
     if(tmpServs.size() ==0 && tmpU.size() == 0) {
-        int hector = sendS2sLeave(fromAdr, (string)r->req_s2s_channel);
-        if(hector == -1) {
-            cout << "error sending leave back b/c dup msg \n";
-            return -1;
+        for(int s=0; s<neighborServers.size(); s++) {
+            if(checkAddrEq(neighborServers[s], fromAdr) != 0) {
+                int hector = sendS2sLeave(neighborServers[s], chan);
+                if(hector == -1) {
+                    cout << "error sending leave back b/c dup msg \n";
+                    return -1;
+                }
+            }
+            
         }
+        
     }
 
     return 0;
