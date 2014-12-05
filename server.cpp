@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     int req_tester = 0;
     while(1)
     {
-        alarm(1);//testing alarm interval
+        alarm(60);//testing alarm interval
                 if(got_interrupt)
                 {
                     cout << "we just got an interupt!" << endl;
@@ -212,7 +212,7 @@ int req_s2sJoin(struct request_s2s_join *r)
             cout << "We are in req_s2sJoin" << endl;
             for(vector<struct sockaddr_in>::iterator it = tmpV.begin(); it != tmpV.end(); ++it)
             {
-                if(checkAddrEq(*it,reqAddr))
+                if(!checkAddrEq(*it,reqAddr))
                 {
                     cout << "here we are" << endl;
                     alreadySubbed = true;
