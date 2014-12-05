@@ -8,6 +8,8 @@
  */
  //#include <endian.h>
        #include <stdint.h>
+#include <signal.h>
+#include <time.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -31,6 +33,7 @@
  #define MAX_MSG_LEN 65536
 using namespace std;
 //globals
+volatile int got_interrupt = 0;//used for signal handeling
 struct sockaddr recAddr;
 socklen_t fromlen = sizeof(recAddr);
 int sockfd;
@@ -46,6 +49,7 @@ vector<long long> msgIds;
 string homeServerStringAddr;
 int homeServerPort;
 //methods
+void sig_alarm(int signo){got_interrupt = 1;}//used to catch SIGALRM for soft state
 string stringAddr(struct sockaddr_in);
 string getUserOfCurrAddr();
 int checkAddrEq(struct sockaddr_in, struct sockaddr_in);
@@ -73,6 +77,7 @@ int sendS2SSay(struct request_say*,string,string);
 //program
 int main(int argc, char **argv)
 {
+    signal(SIGALRM, sig_alarm);//needed for soft state
     addrAr = NULL;
     sockfd = 0;
     if((argc-1) < 2) { 
@@ -94,6 +99,14 @@ int main(int argc, char **argv)
     int req_tester = 0;
     while(1)
     {
+        alarm(1);//testing alarm interval
+                if(got_interrupt)
+                {
+                    cout << "we just got an interupt!" << endl;
+                    got_interrupt = 0;//reset interupt
+                    for(vector<string>::iterator it = channels.begin(); it != channels.end(); ++it)
+                        sendS2SJoin(*it);
+                }
         int bal = 0;
         int selCheck = 0;
         FD_ZERO(&fdWait);
@@ -195,7 +208,19 @@ int req_s2sJoin(struct request_s2s_join *r)
             //map<string,vector<struct sockaddr_in> >::iterator tmpIt = chanTlkServer.find(chan);
             //vector<struct sockaddr_in> tmpV = tmpIt->second;
             vector<struct sockaddr_in> tmpV = chanTlkServer[chan];
-            tmpV.push_back(reqAddr);
+            bool alreadySubbed = false;
+            cout << "We are in req_s2sJoin" << endl;
+            for(vector<struct sockaddr_in>::iterator it = tmpV.begin(); it != tmpV.end(); ++it)
+            {
+                if(checkAddrEq(*it,reqAddr))
+                {
+                    cout << "here we are" << endl;
+                    alreadySubbed = true;
+                    break;
+                 }
+             }
+            if(!alreadySubbed)
+                tmpV.push_back(reqAddr);
             //chanTlkServer.erase(chan);
             //chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(chan,tmpV));
             chanTlkServer[chan] = tmpV;
