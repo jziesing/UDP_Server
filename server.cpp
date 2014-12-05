@@ -255,11 +255,11 @@ int s2sSay(struct request_s2s_say *r)
         if(msgIds[i] == msgId){
             cout << "dup message :\n";
             //send LEAVE back to requester addr
-            int hector = sendS2sLeave(fromAdr, (string)r->req_s2s_channel);
-            if(hector == -1) {
-                cout << "error sending leave back b/c dup msg \n";
-                return -1;
-            }
+            //int hector = sendS2sLeave(fromAdr, (string)r->req_s2s_channel);
+            //if(hector == -1) {
+            //     cout << "error sending leave back b/c dup msg \n";
+            //     return -1;
+            // }
             return 0;
         }
     }
@@ -304,9 +304,16 @@ int s2sSay(struct request_s2s_say *r)
             return -1;
         }
     }
-    tmpU.clear();
+    //tmpU.clear();
+    if(tmpServs.size() ==0 && tmpU.size() == 0) {
+        int hector = sendS2sLeave(fromAdr, (string)r->req_s2s_channel);
+        if(hector == -1) {
+            cout << "error sending leave back b/c dup msg \n";
+            return -1;
+        }
+    }
 
-return 0;
+    return 0;
 
 }
 //returns string of sockaddr_in
