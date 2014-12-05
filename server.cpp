@@ -166,7 +166,7 @@ int sendS2SJoin_Except(string channel, sockaddr_in sender)
     vector<struct sockaddr_in> temporaServs;
     for(int i=0; i <neighborServers.size(); i++) {
         if((check = checkAddrEq(neighborServers[i], sender)) != 0) {
-            temporaServs.push_back(neighborServers[i]);
+            
             cout << "Sending S2S Join from server : " << stringAddr(neighborServers[i]) << ". On port : " << (int)ntohs(neighborServers[i].sin_port) << ".\n";
             int res = sendto(sockfd, &server_join, sizeof(server_join), 0, (struct sockaddr*)&(neighborServers[i]), sizeof(neighborServers[i]));
             if(res == -1) {
@@ -174,6 +174,7 @@ int sendS2SJoin_Except(string channel, sockaddr_in sender)
                 return -1;
             }
         }
+        temporaServs.push_back(neighborServers[i]);
     }
     chanTlkServer[channel] = temporaServs;
     return 0;
@@ -187,8 +188,9 @@ int req_s2sJoin(struct request_s2s_join *r)
     for(int i=0; i<channels.size(); i++) {
         if(channels[i] == chan) {
             //old channel
-            map<string,vector<struct sockaddr_in> >::iterator tmpIt = chanTlkServer.find(chan);
-            vector<struct sockaddr_in> tmpV = tmpIt->second;
+            //map<string,vector<struct sockaddr_in> >::iterator tmpIt = chanTlkServer.find(chan);
+            //vector<struct sockaddr_in> tmpV = tmpIt->second;
+            vector<struct sockaddr_in> tmpV = chanTlkServer[chan];
             tmpV.push_back(reqAddr);
             //chanTlkServer.erase(chan);
             //chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(chan,tmpV));
@@ -199,9 +201,9 @@ int req_s2sJoin(struct request_s2s_join *r)
     }
     //new channel
     vector<struct sockaddr_in> tmpServers;
-    tmpServers.insert(tmpServers.begin(), reqAddr);
-    //chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(chan,tmpServers));
-    chanTlkServer[chan] = tmpServers;
+    tmpServers.push_back(reqAddr);
+    chanTlkServer.insert(pair<string,vector<struct sockaddr_in> >(chan,tmpServers));
+    //chanTlkServer[chan] = tmpServers;
     channels.push_back(chan);
     vector<pair<string,struct sockaddr_in> > tmpUsers;
     chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(chan,tmpUsers));
