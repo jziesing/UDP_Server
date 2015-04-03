@@ -28,13 +28,7 @@ int s; //socket
 struct sockaddr_in server; //server address
 int cont; //continue to loop
 char active_channel[CHANNEL_MAX]; //active channel
-
-
 map<string,string> subscribed_channels;
-
-
-
-
 int send_login_message(char* username);
 int send_join_message(char* channel);
 int send_say_message(char* channel, char* text);
@@ -165,8 +159,6 @@ int main(int argc, char *argv[])
 			if (FD_ISSET(STDIN,&fds))
 			{
 				//printf("stdin input available\n");
-				//cout << "earth TESTTTTT : 1\n";
-				printf("this is HOPE : %s\n", active_channel);
 				handle_user_input();
 				
 				user_data = 1;
@@ -385,7 +377,6 @@ int send_who_message(char* channel)
 
 int send_say_message(char* text)
 {
-	//cout << "earth TESTTTTT : JJJ\n";
 	ssize_t bytes;
 	void *data;
 	size_t len;
@@ -397,7 +388,7 @@ int send_say_message(char* text)
 	data = &say_msg;
 
 	len = sizeof say_msg;
-	
+
 	bytes = sendto(s, data, len, 0, (struct sockaddr*)&server, sizeof server);
 
 	if (bytes < 0)
@@ -416,7 +407,7 @@ void handle_user_input()
 {
 		//write reading from stdin into a separate function
 		// -body of the loop
-		//cout << "earth TESTTTTT : 2\n";
+
 		int count = 0;
 		char userinput[SAY_MAX];
 		char c = '\0';
@@ -618,10 +609,10 @@ void handle_server_input()
 	char recv_text[MAX_MESSAGE_LEN];
 	data = &recv_text;
 	len = sizeof recv_text;
+	printf("Jack early handle serverinput test\n");
 
-cout << "earth TESTTTTT : 4\n";
 	bytes = recvfrom(s, data, len, 0, (struct sockaddr*)&server, &fromlen);
-cout << "earth TESTTTTT : after recvefrommm\n";
+
 
 	if (bytes < 0)
 	{
@@ -640,18 +631,17 @@ cout << "earth TESTTTTT : after recvefrommm\n";
 		//recv_text = *(struct text *)data;
 
 
-		//printf("Message Type:");
+		printf("Message Type:");
 		text_t message_type = recv_text->txt_type;
-		//printf("%d", message_type);
-		//printf("\n");
-		//cout << "earth TESTTTTT : 3\n";
+		printf("%d", message_type);
+		printf("\n");
+
 
 		if (message_type == TXT_SAY)
 		{
-			
 			struct text_say* say_text;
 			say_text = (struct text_say*)data;
-			//printf("Say message :");
+			printf("Say message :");
 			printf("[");
 			printf(say_text->txt_channel);
 			printf("][");
