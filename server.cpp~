@@ -452,7 +452,10 @@ int loginReq(struct request_login *rl)
 //handle login requests
 int logoutReq(struct request_logout *rl)
 {
+/*
+    cout << "got a logout req!!!!!\n";
     string username = getUserOfCurrAddr();
+    struct sockaddr_in tmpAddr = getAddrStruct();
     multimap<string, struct sockaddr_in>::iterator sockIt = userToAddrStrct.find(username);
     userToAddrStrct.erase(sockIt);
     map<string,vector<string> >::iterator git;
@@ -460,19 +463,78 @@ int logoutReq(struct request_logout *rl)
     if(git != usrTlkChan.end()) {
         usrTlkChan.erase(username);
     }
+    map<string,vector<pair<string,struct sockaddr_in> > >::iterator ctu_It;
+    for(ctu_It = chanTlkUser.begin(); ctu_It != chanTlkUser.end(); ctu_It++) {
+        string tmpChannel = ctu_It->first;
+        vector<pair<string,struct sockaddr_in> > tmp_usr_vec;
+        for(int i=0; i<ctu_It->second.size(); i++) {
+            if(username != ctu_It->second[i].first) {
+                if(checkAddrEq(tmpAddr,ctu_It->second[i].second) != 0) {
+                    tmp_usr_vec.push_back(ctu_It->second[i]);
+                }
+            }
+        }
+        if(tmp_usr_vec.size() > 0) {
+            chanTlkUser[tmpChannel] = tmp_usr_vec;
+        } else if(tmp_usr_vec.size() == 0) {
+            chanTlkUser.erase(tmpChannel);
+            // vector<string> temporaChans;
+            // for(int h=0; h<channels.size(); h++) {
+            //     if(channels[h] != tmpChannel) {
+            //         temporaChans.push_back(channels[h]);
+            //     }
+            // }
+            // channels = temporaChans;
+        }
+    }
+
+
+
+    
     //erase user on channels in chanTlkUser
     for(int ick=0; ick<channels.size(); ick++) {
         map<string,vector<pair<string,struct sockaddr_in> > >::iterator itck = chanTlkUser.find(channels[ick]);
         vector<pair<string,struct sockaddr_in> > usersC = itck->second;
         for(int j=0; j<usersC.size(); j++) {
             if(usersC[j].first == username) {
-                usersC.erase(usersC.begin()+j);
+                if(checkAddrEq(usersC[j].second, tmpAddr) == 0) {
+                    usersC.erase(usersC.begin()+j);
+                }
             }
         }
         chanTlkUser.erase(itck);
-        chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(channels[ick],usersC));
+        if(usersC.size() > 0) {
+            chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(channels[ick],usersC));
+            
+        } else if(usersC.size() == 0) {
+            channels.erase(channels.begin()+ick);
+        }
+        
     }
-    return 0;
+    */
+
+	string username = getUserOfCurrAddr();
+	multimap<string, struct sockaddr_in>::iterator sockIt = userToAddrStrct.find(username);
+	userToAddrStrct.erase(sockIt);
+	map<string,vector<string> >::iterator git;
+	git = usrTlkChan.find(username);
+	if(git != usrTlkChan.end()) {
+		usrTlkChan.erase(username);
+	}
+	//erase user on channels in chanTlkUser
+	for(int ick=0; ick<channels.size(); ick++) {
+		map<string,vector<pair<string,struct sockaddr_in> > >::iterator itck = chanTlkUser.find(channels[ick]);
+		vector<pair<string,struct sockaddr_in> > usersC = itck->second;
+		for(int j=0; j<usersC.size(); j++) {
+			if(usersC[j].first == username) {
+				usersC.erase(usersC.begin()+j);
+			}
+		}
+		chanTlkUser.erase(itck);
+		chanTlkUser.insert(pair<string,vector<pair<string,struct sockaddr_in> > >(channels[ick],usersC));
+	}
+	return 0;
+
 }
 //adopted from example code of program 1
 //error message
@@ -570,11 +632,11 @@ int leaveReq(struct request_leave *rl)
         return -1;
     }
     //delete user from vector of userrs that belongs specific channel
-    vector<pair<string,struct sockaddr_in> > v; = vi->second;
+    vector<pair<string,struct sockaddr_in> > v;
     for(int vecI=0; vecI<vi->second.size(); vecI++) {
-        if(v[vecI].first != username) {
-            if(checkAddrEq(v[vecI].second, reqAddr) != 0) {
-                v.push_back(v[vecI].second);
+        if(vi->second[vecI].first != username) {
+            if(checkAddrEq(vi->second[vecI].second, reqAddr) != 0) {
+                v.push_back(vi->second[vecI]);
             }
         }
     }

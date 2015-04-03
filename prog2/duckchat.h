@@ -44,8 +44,6 @@ typedef int s2s_t;
 #define S2S_JOIN 8
 #define S2S_LEAVE 9
 #define S2S_SAY 10
-#define S2S_WHO 11
-#define S2S_WHO_RPLY 12
 
 //_____________________________________________________________________
 /* This structure is used for a generic request type, to the server. */
@@ -158,18 +156,5 @@ struct request_s2s_say {
         char req_s2s_username[USERNAME_MAX];
         char req_s2s_msg[SAY_MAX];
 } packed;
-
-struct s2s_request_who {
-        s2s_t req_type; /* = S2S_WHO */
-        char s2s_channel[CHANNEL_MAX]; 
-} packed;
-
-struct s2s_text_who {
-        s2s_t req_type; /* = S2S_WHO_RPLY */
-	int nusernames;//how many users are in this reply?
-	char s2s_channel[CHANNEL_MAX];
-	struct user_info txt_users[0];//holds the user names
-} packed;
-
 
 #endif
