@@ -131,18 +131,18 @@ int main(int argc, char **argv)
         //     cout << n << " : \n";
 
         // }
-        cout << "Printing chanTlkUser.\n";
-        map<string,vector<pair<string,struct sockaddr_in> > >::iterator him;
-        for(him = chanTlkUser.begin(); him != chanTlkUser.end(); him++) {
-            cout << him->first << " : channel has users..\n";
-            for(int j=0; j<him->second.size(); j++) {
-                cout << him->second[j].first << " : is a user.\n";
-            }
-        }
-        cout << "Printing channels global array\n";
-        for(int i=0; i<channels.size(); i++) {
-            cout << "channel is : " << channels[i] << "\n";
-        }
+        // cout << "Printing chanTlkUser.\n";
+        // map<string,vector<pair<string,struct sockaddr_in> > >::iterator him;
+        // for(him = chanTlkUser.begin(); him != chanTlkUser.end(); him++) {
+        //     cout << him->first << " : channel has users..\n";
+        //     for(int j=0; j<him->second.size(); j++) {
+        //         cout << him->second[j].first << " : is a user.\n";
+        //     }
+        // }
+        // cout << "Printing channels global array\n";
+        // for(int i=0; i<channels.size(); i++) {
+        //     cout << "channel is : " << channels[i] << "\n";
+        // }
         // cout << "Printing chanTlkServer.\n";
         // cout << chanTlkServer.size() << " : server size\n";
         // map<string,vector<struct sockaddr_in> >::iterator kin;
@@ -248,7 +248,6 @@ int sendS2sLeave(struct sockaddr_in sender, string channel)
         return -1;
     }
     return 0;
-
 }
 //receavi server say
 int s2sSay(struct request_s2s_say *r) 
@@ -273,6 +272,11 @@ int s2sSay(struct request_s2s_say *r)
     map<string,vector<struct sockaddr_in> >::iterator j = chanTlkServer.find(chan);
     if(j == chanTlkServer.end()) {
         cout << "error finding channel to say \n";
+        int hector = sendS2sLeave(fromAdr, (string)r->req_s2s_channel);
+        if(hector == -1) {
+            cout << "error sending leave back b/c dup msg \n";
+            return -1;
+        }
         return -1;
     }
     vector<struct sockaddr_in> tmpServs = j->second;
